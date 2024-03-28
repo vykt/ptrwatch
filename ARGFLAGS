@@ -1,0 +1,8 @@
+USE:
+
+showvars [-c <cfg>] <target>
+
+
+FLAGS:
+
+-c <cfg> --config=<cfg>  : specify config file to use
