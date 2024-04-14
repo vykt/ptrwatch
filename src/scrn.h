@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <optional>
 
 #include <curses.h>
 
@@ -22,18 +23,20 @@ class scrn {
     std::vector<std::string> output;
 
     bool next_refollow;
+    bool terminate;
 
     //methods
     public:
     void init();
-    void end();
+    void fini();
 
+    bool get_terminate();
     void show_output();
-    void check_refollow();
+    void check_keyboard();
+    std::optional<std::string> get_output(cfg * c, mem * m);
 
     private:
-    void get_output(cfg * c, mem * m);
-    void build_entry_output(mem * m, cfg_entry * temp_c_entry);
+    std::optional<std::string> build_entry_output(mem * m, cfg_entry * temp_c_entry);
 };
 
 #endif

@@ -1,4 +1,6 @@
 #include <vector>
+#include <string>
+#include <optional>
 
 #include <cstdio>
 #include <cstdint>
@@ -11,57 +13,61 @@
 #include "args.h"
 
 
-//TODO write init method to open m_data, read_maps, and open fd_mem
-//     write fini method to close m_data, close fd_mem
 
 //init class
-int mem::init(args_struct * args) {
+std::optional<std::string> mem::init(args_struct * args) {
 
    int ret;
 
     //allocate maps_data object
     ret = new_maps_data(&this->m_data);
     if (ret) {
-        //TODO report error
+        return 
+            "[mem::init] libpwu->new_maps_data() could not allocate memory for maps.";
     }
 
     //open target process procfs memory and maps
     ret = open_memory(args->target_pid, &this->stream_maps, &this->fd_mem);
     if (ret) {
-        //TODO report error (failed to open target process memory)
+        return 
+            "[mem::init] libpwu->open_memory() failed to open target maps & memory.";
     }
 
     //read target process memory maps into maps_data
     ret = read_maps(&this->m_data, this->stream_maps);
     if (ret) {
-        //TODO report error (failed to populate maps_data structure
+        return
+            "[mem::init] libpwu->read_maps() error while reading target procfs maps.";
     }
 
-    return 0;
+    return std::nullopt;
 }
 
-int mem::fini() {
+std::optional<std::string> mem::fini() {
 
     int ret;
 
     //deallocate maps_data structure
     ret = del_maps_data(&this->m_data);
     if (ret) {
-        //TODO report error (failed to free memory)
+        return
+            "[mem::fini] libpwu->del_maps_data() error deallocating.";
     }
 
     //close mem descriptor & maps stream
     ret = close(this->fd_mem);
     if (ret) {
-        //TODO try flushing kernel buffer?
+        return
+            "[mem::fini] error closing open procfs memory descriptor.";
     }
 
     ret = fclose(this->stream_maps);
     if (ret) {
-        //TODO try flushing libc buffer?
+        return
+            "[mem::fini] error closing open procfs maps stream.";
     }
 
-    return 0;
+    return std::nullopt;
 }
 
 
@@ -79,21 +85,21 @@ int mem::get_fd_mem() {
 
 
 //read data at addr
-int mem::read_addr(uintptr_t addr, byte * buf, size_t size) {
+std::optional<std::string> mem::read_addr(uintptr_t addr, byte * buf, size_t size) {
 
     ssize_t read_bytes;
 
     read_bytes = read(this->fd_mem, buf, size);
     if (read_bytes == -1) {
-        //TODO report error
+        return "[mem::read_addr] read syscall returned -1.";
     }
 
-    return 0;
+    return std::nullopt;
 }
 
 
 //dereference chain 
-uintptr_t mem::follow_chain(uintptr_t start_addr, 
+std::optional<uintptr_t> mem::follow_chain(uintptr_t start_addr, 
                        std::vector<uintptr_t> * offsets) {
 
     off_t ret;
@@ -105,12 +111,12 @@ uintptr_t mem::follow_chain(uintptr_t start_addr,
 
         ret = lseek(this->fd_mem, start_addr + (*offsets)[i], SEEK_SET);
         if (ret == -1) {
-            //TODO report error
+            return std::nullopt;
         }
 
         read_bytes = read(this->fd_mem, &start_addr, sizeof(start_addr));
         if (read_bytes == -1) {
-            //TODO report error
+            return std::nullopt;
         }
 
     } //end for each offset

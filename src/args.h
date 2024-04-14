@@ -2,6 +2,7 @@
 #define ARGS_H
 
 #include <string>
+#include <optional>
 
 #include "unistd.h"
 
@@ -14,7 +15,7 @@ typedef struct {
 } args_struct;
 
 
-int process_args(int argc, char ** argv, args_struct * args);
+std::optional<std::string> process_args(int argc, char ** argv, args_struct * args);
 
 
 #endif

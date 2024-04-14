@@ -1,4 +1,5 @@
 #include <string>
+#include <optional>
 
 #include <unistd.h>
 #include <getopt.h>
@@ -12,7 +13,7 @@
 
 
 //convert target into PID
-int interpret_target(args_struct * args, char ** argv) {
+std::optional<std::string> interpret_target(args_struct * args, char ** argv) {
 
     int ret;
     char proc_name[NAME_MAX] = {};
@@ -29,9 +30,9 @@ int interpret_target(args_struct * args, char ** argv) {
         //get process name
         ret = name_by_pid(args->target_pid, proc_name);
         if (ret) {
-            //TODO report error (process doesn't exist?)
+            return "[interpret_target]: PID has no associated name (/proc/<pid>/comm).";
         }
-        return 0;
+        return std::nullopt;
     }
 
     //otherwise interpret as process name
@@ -40,37 +41,36 @@ int interpret_target(args_struct * args, char ** argv) {
     name_pid n_pid;
     ret = new_name_pid(&n_pid, (char *) argv[optind]);
     if (ret) {
-        //TODO report error
+        return "[interpret_target]: new_name_pid error (libpwu).";
     }
 
     //fetch PIDs for name & deal with result
     ret = pid_by_name(&n_pid, &args->target_pid);
     switch (ret) {
         case -1:
-            //TODO return error (failed to perform search)
-            break;
+            return "[interpret_target]: failed to perform search.";
         case 0:
-            //TODO report error (no process found with supplied name)
-            break;
+            return "[interpret_target]: no PID found with supplied name.";
         case 1:
             break;
         default:
-            //TODO report error (multiple matches found, please provide PID instead)
-            break;
+            return 
+            "[interpret_target]: multiple matches found, please provide PID instead.";
     }
 
     ret = del_name_pid(&n_pid);
     //not worth exception on fail
 
-    return 0;
+    return std::nullopt;
 
 }
 
 
 //process argv
-int process_args(int argc, char ** argv, args_struct * args) {
+std::optional<std::string> process_args(int argc, char ** argv, args_struct * args) {
 
-    int ret, opt, opt_index;
+    std::optional<std::string> ret;
+    int opt, opt_index;
 
     struct option long_opts[] = {
         {"config", required_argument, NULL, 'c'},
@@ -97,13 +97,13 @@ int process_args(int argc, char ** argv, args_struct * args) {
 
     //get target_pid
     if (argv[optind] == 0) {
-        //TODO report error
+        return "[process_args]: no PID supplied.";
     }
 
     ret = interpret_target(args, argv);
     if (ret) {
-        //TODO report error
+        return ret;
     }
 
-    return 0;
+    return std::nullopt;
 }
