@@ -49,6 +49,7 @@ std::optional<std::string> cfg::read_cfg(mem * m) {
     while (std::getline(this->stream, line)) {
 
         temp_c_entry.offsets.clear();
+        temp_c_entry.name = "";
         temp_c_title.comment.clear();
         substrings.clear();
 
@@ -68,6 +69,9 @@ std::optional<std::string> cfg::read_cfg(mem * m) {
         ret_int = line_to_substrings(&line, &substrings);
         if (!ret_int) continue;
 
+        //save name
+        temp_c_entry.name = substrings[0];
+
         //check substring formatting
         ret_int = check_type_format(&substrings);
         if (!ret_int) {
@@ -77,7 +81,7 @@ std::optional<std::string> cfg::read_cfg(mem * m) {
 
         //save length if type is string to cfg_type
         if (temp_c_entry.c_type == STRING) {
-            temp_c_entry.str_len = std::stoi(substrings[1]);
+            temp_c_entry.str_len = std::stoi(substrings[2]);
             substrings.erase(substrings.begin() + 1);
         }
 
@@ -92,6 +96,51 @@ std::optional<std::string> cfg::read_cfg(mem * m) {
         this->entries.push_back(temp_c_entry);
 
     } //end while each line
+
+    //pad names
+    ret_err = pad_names(); 
+    if (ret_err) return ret_err;
+
+    return std::nullopt;
+}
+
+
+//make names strings all the same length by padding with spaces
+std::optional<std::string> cfg::pad_names() {
+
+    int max;
+
+    cfg_entry * temp_c_entry;
+    std::vector<int> entry_name_lens;
+
+    max = 0;
+
+    //iterate twice, once to get max, second time to pad
+    for (int i = 0; i < 2; ++i) {
+
+        //for each variant that is an entry
+        for (unsigned long j = 0; j < this->entries.size(); ++j) {
+
+            //skip titles
+            if (std::holds_alternative<cfg_title>(this->entries[j])) continue;
+
+            //get ptr to entry
+            temp_c_entry = std::get_if<cfg_entry>(&(this->entries)[j]);
+
+            if (i == 0) {
+                //update max
+                entry_name_lens.push_back(temp_c_entry->name.length());
+                if (temp_c_entry->name.length() > (unsigned long) max) max = temp_c_entry->name.length();
+            
+            } else {
+                //pad with spaces
+                temp_c_entry->name.insert(0, max-entry_name_lens[0], ' ');
+                entry_name_lens.erase(entry_name_lens.end() - 1);
+            }
+
+        } //end inner for
+    
+    } //end outer for
 
     return std::nullopt;
 }
@@ -275,7 +324,7 @@ inline std::optional<int>
 
     //check substrings are properly formatted
     for (int i = 0; i < CFG_TYPES_LEN; ++i) {
-        if ((*substrings)[0] == cfg_type[i]) substring_type = i;
+        if ((*substrings)[1] == cfg_type[i]) substring_type = i;
     }
     if (substring_type == -1) {
         return std::nullopt;

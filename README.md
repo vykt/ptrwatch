@@ -83,8 +83,10 @@ this is a title
 __Entries__ display the value at the end of a pointer chain. An entry takes the following format:
 
 ```
-<type>:<start_backing_file> <offsets>
+<description>:<type>:<start_backing_file> <offsets>
 ```
+
+_description_ is a string displayed besides the value read from the pointer chain.
 
 _type_ can be any of:
 
@@ -106,6 +108,7 @@ _start_backing_file_ can either be the string representation of the backing file
 
 _offsets_ are a space delimited list of offsets. The final offset is dereferenced as _type_ and displayed.
 
+See the provided _ptrwatch.cfg_ for examples.
 
 ---
 

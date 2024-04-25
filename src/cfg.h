@@ -40,6 +40,7 @@ typedef struct {
     enum cfg_type c_type;
     int str_len;
     uintptr_t start_addr;
+    std::string name;
     std::vector<uintptr_t> offsets;
     uintptr_t cached_final_addr;
 
@@ -75,6 +76,7 @@ class cfg {
     std::vector<cfg_variant> * get_entries();
 
     private:
+    std::optional<std::string> pad_names();
     std::optional<int> check_title(std::string * line);
     std::optional<int> line_to_substrings(std::string * line, 
                                           std::vector<std::string> * substrings);
