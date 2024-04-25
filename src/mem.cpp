@@ -87,7 +87,13 @@ int mem::get_fd_mem() {
 //read data at addr
 std::optional<std::string> mem::read_addr(uintptr_t addr, byte * buf, size_t size) {
 
+    off_t ret;
     ssize_t read_bytes;
+
+    ret = lseek(this->fd_mem, addr, SEEK_SET);
+    if (ret == -1) {
+        return "[mem::read_addr] lseek syscall returned -1.";
+    }
 
     read_bytes = read(this->fd_mem, buf, size);
     if (read_bytes == -1) {
@@ -107,7 +113,7 @@ std::optional<uintptr_t> mem::follow_chain(uintptr_t start_addr,
     uintptr_t final_addr;
 
     //for each offset
-    for (int i = 0; i < offsets->size() - 1; ++i) {
+    for (unsigned long i = 0; i < offsets->size() - 1; ++i) {
 
         ret = lseek(this->fd_mem, start_addr + (*offsets)[i], SEEK_SET);
         if (ret == -1) {

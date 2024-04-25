@@ -1,6 +1,8 @@
 #include <iostream>
 #include <optional>
 
+#include <unistd.h>
+
 #include "cfg.h"
 #include "mem.h"
 #include "args.h"
@@ -9,6 +11,7 @@
 
 #define RESET "\033[0m"
 #define RED   "\033[31m"
+
 
 
 void report_error(std::optional<std::string> error) {
@@ -56,6 +59,7 @@ int main(int argc, char ** argv) {
             break;            
         }
         s.show_output();
+        usleep(REFRESH_USEC);
         s.check_keyboard();
 
     } //end display loop

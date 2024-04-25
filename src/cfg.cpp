@@ -10,6 +10,7 @@
 #include <libpwu.h>
 
 #include "cfg.h"
+#include "scrn.h"
 #include "mem.h"
 
 
@@ -40,8 +41,6 @@ std::optional<std::string> cfg::read_cfg(mem * m) {
     std::vector<std::string> substrings;
     std::string line;
 
-    int substring_count;
-
     cfg_entry temp_c_entry;
     cfg_title temp_c_title;
 
@@ -49,12 +48,14 @@ std::optional<std::string> cfg::read_cfg(mem * m) {
     //process cfg a line at a time
     while (std::getline(this->stream, line)) {
 
-        substring_count = 0;
+        temp_c_entry.offsets.clear();
+        temp_c_title.comment.clear();
         substrings.clear();
 
         //check if this line is a title
         ret_int = check_title(&line);
         if (ret_int) {
+            line.erase(0, 1);
             temp_c_title.comment = line;
             this->entries.push_back(temp_c_title);
 
@@ -66,7 +67,6 @@ std::optional<std::string> cfg::read_cfg(mem * m) {
         //divide line into substrings
         ret_int = line_to_substrings(&line, &substrings);
         if (!ret_int) continue;
-        substring_count = ret_int.value();
 
         //check substring formatting
         ret_int = check_type_format(&substrings);
@@ -122,7 +122,8 @@ inline std::optional<int> cfg::line_to_substrings(std::string * line,
     substring_count = 0;
 
     //skip comments, blank lines and improperly formatted lines
-    if ((*line)[0] == '#' || (*line)[0] == '\n' || (*line)[0] == ' ') {
+    if (!line->length() 
+        || (*line)[0] == '#' || (*line)[0] == '\n' || (*line)[0] == ' ') {
         return std::nullopt;
     }
 
@@ -197,6 +198,9 @@ inline std::optional<std::string> cfg::substring_to_offsets(mem * m,
             ret_off = get_first_addr(m, &offset);
             if (!ret_off) return
                 "[cfg::substring_to_offsets] could not resolve first address.";
+            else {
+                *start_addr = ret_off.value();
+            }
         } else {
             ret_err = this->check_multiply_offset(&offset, &offset_ptr);
             if (ret_err) {
@@ -271,7 +275,7 @@ inline std::optional<int>
 
     //check substrings are properly formatted
     for (int i = 0; i < CFG_TYPES_LEN; ++i) {
-        if ((*substrings)[i] == cfg_type[i]) substring_type = i;
+        if ((*substrings)[0] == cfg_type[i]) substring_type = i;
     }
     if (substring_type == -1) {
         return std::nullopt;

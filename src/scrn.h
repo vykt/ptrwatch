@@ -12,6 +12,7 @@
 
 
 #define DATA_BUF_MAX 128
+#define REFRESH_USEC 100000
 
 
 //ncurses & output class
@@ -20,7 +21,9 @@ class scrn {
     //attributes
     private:
     byte * data_buf;
+    std::vector<bool> is_title;
     std::vector<std::string> output;
+    std::vector<std::string> old_output;
 
     bool next_refollow;
     bool terminate;

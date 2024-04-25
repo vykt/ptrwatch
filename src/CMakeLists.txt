@@ -27,15 +27,17 @@ set (HEADERS_PTRWATCH
 add_executable(watch ${SOURCES_PTRWATCH} ${HEADERS_PTRWATCH})
 add_executable(watch_debug ${SOURCES_PTRWATCH} ${HEADERS_PTRWATCH})
 
-#find libpwu
+#find dependencies
+find_package(Curses REQUIRED)
 find_library(PWU_LIB pwu)
+#find_library(NCURSES_LIB ncurses)
 
 #ptrscan options
 target_compile_features(watch PUBLIC cxx_std_17)
 target_compile_options(watch PUBLIC -O2 -Wall)
-target_link_libraries(watch PUBLIC "${PWU_LIB}")
+target_link_libraries(watch PUBLIC "${PWU_LIB}" PUBLIC "${CURSES_LIBRARIES}")
 
 #ptrscan debug options
 target_compile_features(watch_debug PUBLIC cxx_std_17)
 target_compile_options(watch_debug PUBLIC -ggdb -O0 -Wall)
-target_link_libraries(watch_debug PUBLIC "${PWU_LIB}")
+target_link_libraries(watch_debug PUBLIC "${PWU_LIB}" PUBLIC "${CURSES_LIBRARIES}")
